@@ -27,7 +27,7 @@ namespace CheckOutKata
 
         internal CheckOut Scan(Product scannedProduct)
         {
-            return new CheckOut(new Basket(_currentBasket, scannedProduct));
+            return new CheckOut(new Basket(_currentBasket, new BasketItem(scannedProduct)));
         }
     }
 }

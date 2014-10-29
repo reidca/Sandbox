@@ -51,7 +51,9 @@
   </Choose>
   <ItemGroup>
     <Compile Include="Basket.cs" />
+    <Compile Include="BasketItem.cs" />
     <Compile Include="CheckOut.cs" />
+    <Compile Include="DiscountEngine.cs" />
     <Compile Include="DiscountRule.cs" />
     <Compile Include="EquitableList.cs" />
     <Compile Include="Money.cs" />
