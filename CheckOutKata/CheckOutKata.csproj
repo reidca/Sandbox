@@ -53,10 +53,13 @@
     <Compile Include="Basket.cs" />
     <Compile Include="BasketItem.cs" />
     <Compile Include="CheckOut.cs" />
+    <Compile Include="DiscountedBasketItem.cs" />
     <Compile Include="DiscountEngine.cs" />
     <Compile Include="DiscountRule.cs" />
     <Compile Include="EquitableList.cs" />
+    <Compile Include="IBasketItem.cs" />
     <Compile Include="Money.cs" />
+    <Compile Include="PricingEngine.cs" />
     <Compile Include="Product.cs" />
     <Compile Include="UnitTest1.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

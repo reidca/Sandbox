@@ -10,6 +10,7 @@ namespace CheckOutKata
         //A - 5
         //B - 10
         //C - 20
+        //D - 50
         // Discount Rules
         //Buy 3 x A get 1 free
         //Buy 2 x B for 15
@@ -37,7 +38,7 @@ namespace CheckOutKata
 
             Assert.AreEqual(new Money(30), _checkout.GetTotal());
         }
-        
+
         [TestMethod]
         public void TotalCostof1A_Is5()
         {
@@ -122,7 +123,7 @@ namespace CheckOutKata
 
             Assert.AreEqual(new Money(25), _checkout.GetTotal());
         }
-         
+
         [TestMethod]
         public void TotalCostof2xAand2XC_Is40()
         {
@@ -183,6 +184,24 @@ namespace CheckOutKata
                 .Scan(new Product("C"));
 
             Assert.AreEqual(new Money(35), _checkout.GetTotal());
+        }
+
+        [TestMethod]
+        public void NoDiscountAppliedTo_ProductD()
+        {
+            int numberOfItemsInBasket = 100;
+
+            Money totalCost = PricingEngine.PriceList[new Product("D")] * numberOfItemsInBasket;
+
+
+            for (int i = 1; i <= numberOfItemsInBasket; i++)
+            {
+                _checkout
+                    .Scan(new Product("D"));
+            }
+
+            Assert.AreEqual(totalCost, _checkout.GetTotal());
+
         }
 
 

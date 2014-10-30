@@ -7,75 +7,39 @@ namespace CheckOutKata
 {
     public class Basket
     {
-        private static Dictionary<Product, Money> _priceList = new Dictionary<Product, Money>() 
-        {
-            {new Product("A"), new Money(5)},
-            {new Product("B"), new Money(10)},
-            {new Product("C"), new Money(20)},
-
-        };
-
-        private DiscountEngine _discountEngine;
-
-        List<BasketItem> _basketContents = new List<BasketItem>();
+        internal List<IBasketItem> BasketContents = new List<IBasketItem>();
 
         public Basket()
         {
-            _discountEngine = new DiscountEngine();
+
         }
 
         public Basket(Basket oldBasket, BasketItem newBasketItem)
             : this()
         {
-            _basketContents = oldBasket._basketContents;
-            _basketContents.Add(newBasketItem);
+            this.BasketContents = oldBasket.BasketContents;
+            this.BasketContents.Add(newBasketItem);
         }
 
-        internal Money GetTotalCost()
+        internal Money SubTotal()
         {
             Money subTotal = new Money(0);
-            foreach (BasketItem itemInBasket in _basketContents)
+            foreach (BasketItem itemInBasket in BasketContents)
             {
-                subTotal += _priceList[itemInBasket.Product];
+                subTotal += PricingEngine.PriceList[itemInBasket.Product];
             }
 
-            return _discountEngine.ApplyDiscounts(subTotal, GetDiscountsApplicableToBasket());
+            return subTotal;
         }
 
-        private int GetProductTypeCountInBasket(Product product)
+        public Money GetTotalCost()
         {
-            return _basketContents.Count(n => n.Equals(product));
+            return new DiscountEngine(this).ApplyDiscounts();
         }
 
-        
-
-        private List<Product> GetUniqueProductsInBasket()
+        internal List<Product> GetUniqueProductsInBasket()
         {
-            return _basketContents.Select(basketItem => basketItem.Product).Distinct().ToList();
-
+            return this.BasketContents.Select(basketItem => basketItem.Product).Distinct().ToList();
         }
-        private IList<DiscountRule> GetDiscountsApplicableToBasket()
-        {
-            IList<DiscountRule> applicableDiscounts = new List<DiscountRule>();
-            foreach (DiscountRule productTypeDiscount in _discountEngine.GetDiscountsForProductTypesInBasket(GetUniqueProductsInBasket()))
-            {
-                int timesToApplyDiscount = GetNumberOfTimesToApplyDiscountForProductsInBasket(productTypeDiscount);
-
-                for (int discountApplyCount = 0; (timesToApplyDiscount > 0) && (discountApplyCount < timesToApplyDiscount); discountApplyCount++)
-                {
-                    applicableDiscounts.Add(productTypeDiscount);
-                }
-            }
-
-            return applicableDiscounts;
-        }
-
-
-
-
-
-
-
-
     }
 }

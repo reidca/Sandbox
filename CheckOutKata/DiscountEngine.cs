@@ -8,6 +8,12 @@ namespace CheckOutKata
 {
     public class DiscountEngine
     {
+        private Basket _basket;
+
+        public DiscountEngine(Basket basket)
+        {
+            _basket = basket;
+        }
 
         public static IList<DiscountRule> CurrentDiscounts = new List<DiscountRule>()
         {
@@ -20,11 +26,11 @@ namespace CheckOutKata
         };
 
 
-        public Money ApplyDiscounts(Money subTotal, IList<DiscountRule> discountsToApply)
+        public Money ApplyDiscounts()
         {
-            Money discountedTotal = subTotal;
+            Money discountedTotal = _basket.SubTotal();
 
-            foreach (DiscountRule discountRule in discountsToApply)
+            foreach (DiscountRule discountRule in GetDiscountsApplicableToBasket())
             {
                 System.Diagnostics.Debug.WriteLine("Applying discount {0}", discountRule);
                 discountedTotal -= discountRule.Discount;
@@ -33,7 +39,7 @@ namespace CheckOutKata
             return discountedTotal;
         }
 
-        private IList<DiscountRule> GetDiscountsApplicableToProductType(Product productToGetDiscountRuleFor)
+        private static IList<DiscountRule> GetDiscountsApplicableToProductType(Product productToGetDiscountRuleFor)
         {
             IList<DiscountRule> productDiscounts = new List<DiscountRule>();
             foreach (DiscountRule discountRule in CurrentDiscounts)
@@ -47,7 +53,7 @@ namespace CheckOutKata
             return productDiscounts;
         }
 
-        public List<DiscountRule> GetDiscountsForProductTypesInBasket(List<Product> productsInBasket)
+        private static List<DiscountRule> GetDiscountsForProductTypesInBasket(List<Product> productsInBasket)
         {
             EquatableList<DiscountRule> productDiscounts = new EquatableList<DiscountRule>();
 
@@ -58,25 +64,88 @@ namespace CheckOutKata
             return productDiscounts.Distinct().ToList();
         }
 
-        public int GetNumberOfTimesToApplyDiscountForProductsInBasket(DiscountRule productTypeDiscount)
+        private IList<DiscountRule> GetDiscountsApplicableToBasket()
         {
-            int miniumProductTypeCountInBasket = -1;
+            IList<DiscountRule> applicableDiscounts = new List<DiscountRule>();
 
-            foreach (Product requiredProduct in productTypeDiscount.RequiredProducts)
+            IList<IBasketItem> basketItemsNotCurrentlyDiscounted = GetBasketItemsWhereNoDiscountHasBeenApplied(_basket.BasketContents);
+
+            foreach (DiscountRule productTypeDiscount in GetDiscountsForProductTypesInBasket(_basket.GetUniqueProductsInBasket()))
             {
-                if (GetProductTypeCountInBasket(requiredProduct) >= productTypeDiscount.RequiredPurchaseCount)
+                int timesToApplyDiscount = GetNumberOfTimesToApplyDiscountFoSelectedProducts(basketItemsNotCurrentlyDiscounted.Select(basketItem => basketItem.Product).ToList(), productTypeDiscount);
+
+                if (timesToApplyDiscount > 0)
                 {
-                    int productTypeCountInBasket = GetProductTypeCountInBasket(requiredProduct);
-                    miniumProductTypeCountInBasket = ((miniumProductTypeCountInBasket == -1) ? productTypeCountInBasket : Math.Min(productTypeCountInBasket, miniumProductTypeCountInBasket));
-                }
-                else
-                {
-                    miniumProductTypeCountInBasket = -1;
-                    break;
+                    for (int discountApplyCount = 0; (timesToApplyDiscount > 0) && (discountApplyCount < timesToApplyDiscount); discountApplyCount++)
+                    {
+                        applicableDiscounts.Add(productTypeDiscount);
+                    }
+
+                    basketItemsNotCurrentlyDiscounted = GetBasketItemsWhereNoDiscountHasBeenApplied(UpdateDiscountStatus(basketItemsNotCurrentlyDiscounted, productTypeDiscount));
                 }
             }
 
-            return Math.Max(0, miniumProductTypeCountInBasket / productTypeDiscount.RequiredPurchaseCount);
+            return applicableDiscounts;
+        }
+
+        private static IList<IBasketItem> GetBasketItemsWhereNoDiscountHasBeenApplied(IList<IBasketItem> basketItems)
+        {
+            IList<IBasketItem> basketItemsNotCurrentlyDiscounted = basketItems.Where(basketItem => basketItem.HasBeenDiscounted == false).ToList();
+            return basketItemsNotCurrentlyDiscounted;
+        }
+
+        private static IList<IBasketItem> UpdateDiscountStatus(IList<IBasketItem> basketItems, DiscountRule productTypeDiscountApplied)
+        {
+            int numberOfEachProductToRemove = GetQualifyingProductCountForDiscount(basketItems.Select(basketItem => basketItem.Product).ToList(), productTypeDiscountApplied);
+            IList<IBasketItem> postDiscountBasketItems = new List<IBasketItem>();
+            foreach (Product requiredProduct in productTypeDiscountApplied.RequiredProducts)
+            {
+                int quantityRemoved = 0;
+                foreach (BasketItem basketItem in basketItems)
+                {
+                    if ((basketItem.Product == requiredProduct) && (quantityRemoved <= numberOfEachProductToRemove))
+                    {
+                        quantityRemoved += 1;
+                        
+                        postDiscountBasketItems.Add(new DiscountedBasketItem(basketItem,productTypeDiscountApplied ));
+                    }
+                }
+            }
+
+            return postDiscountBasketItems;
+        }
+        
+        private static int GetProductTypeCountInSelectedProducts(IList<Product> selectedProducts, Product productType)
+        {
+            return selectedProducts.Count(n => n.Equals(productType));
+        }
+
+        private static int GetNumberOfTimesToApplyDiscountFoSelectedProducts(IList<Product> selectedProducts, DiscountRule productTypeDiscount)
+        {
+            int miniumProductTypeCountInSelectedProducts = GetQualifyingProductCountForDiscount(selectedProducts, productTypeDiscount);
+
+            return Math.Max(0, miniumProductTypeCountInSelectedProducts / productTypeDiscount.RequiredPurchaseCount);
+        }
+
+        private static int GetQualifyingProductCountForDiscount(IList<Product> selectedProducts, DiscountRule productTypeDiscount)
+        {
+            int miniumProductTypeCountInSelectedProducts = -1;
+
+            foreach (Product requiredProduct in productTypeDiscount.RequiredProducts)
+            {
+                int productTypeCountInSelectedProducts = GetProductTypeCountInSelectedProducts(selectedProducts, requiredProduct);
+
+                if (productTypeCountInSelectedProducts >= productTypeDiscount.RequiredPurchaseCount)
+                {
+                    miniumProductTypeCountInSelectedProducts = ((miniumProductTypeCountInSelectedProducts == -1) ? productTypeCountInSelectedProducts : Math.Min(productTypeCountInSelectedProducts, miniumProductTypeCountInSelectedProducts));
+                }
+                else
+                {
+                    miniumProductTypeCountInSelectedProducts = -1;
+                    break;
+                }
+            }
+            return miniumProductTypeCountInSelectedProducts;
         }
     }
 }

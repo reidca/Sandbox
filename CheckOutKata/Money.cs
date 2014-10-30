@@ -15,7 +15,7 @@ namespace CheckOutKata
 
         public override bool Equals(object obj)
         {
-            
+
             if (obj == null || GetType() != obj.GetType())
             {
                 return false;
@@ -47,6 +47,11 @@ namespace CheckOutKata
         public static bool operator !=(Money money1, Money money2)
         {
             return (money1._value != money2._value);
+        }
+
+        public static Money operator *(Money money, int iterations)
+        {
+            return new Money(money._value * iterations);
         }
 
         public override string ToString()
