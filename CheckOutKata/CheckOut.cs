@@ -7,6 +7,13 @@ namespace CheckOutKata
 {
     public class CheckOut
     {
+        public event ItemScannedEventHandler ItemScanned;
+        public event TotalCalculatedEventHandler TotalCalculated;
+        public delegate void ItemScannedEventHandler(object sender, ItemScannedEventArgs e);
+        public delegate void TotalCalculatedEventHandler(object sender, TotalCalculatedEventArgs e);
+
+
+
         private Basket _currentBasket;
 
         public CheckOut()
@@ -14,20 +21,34 @@ namespace CheckOutKata
             _currentBasket = new Basket();
         }
 
-        private CheckOut(Basket basket)
+        private CheckOut(Basket basket, ItemScannedEventHandler itemScannedHandler, TotalCalculatedEventHandler totalCalculatedHandler)
         {
             _currentBasket = basket;
+            this.ItemScanned = itemScannedHandler;
+            this.TotalCalculated = totalCalculatedHandler;
         }
 
-
-        internal Money GetTotal()
+        internal void CalculateTotal()
         {
-            return _currentBasket.GetTotalCost();
+            if (this.TotalCalculated != null)
+            {
+                this.TotalCalculated(this, new TotalCalculatedEventArgs(_currentBasket.GetTotalCost()));
+            }
         }
 
         internal CheckOut Scan(Product scannedProduct)
         {
-            return new CheckOut(new Basket(_currentBasket, new BasketItem(scannedProduct)));
+            var b = new Basket(_currentBasket, new BasketItem(scannedProduct));
+            var c = new CheckOut(b,this.ItemScanned, this.TotalCalculated);
+            
+            if (this.ItemScanned != null)
+            {
+                this.ItemScanned(this, new ItemScannedEventArgs(scannedProduct,PricingEngine.PriceList[scannedProduct],b.GetTotalCost()));
+            }
+
+            return c;
+
+            
         }
     }
 }

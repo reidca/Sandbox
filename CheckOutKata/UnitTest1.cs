@@ -4,7 +4,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace CheckOutKata
 {
     [TestClass]
-    public class CheckOutTests
+    public class CheckOutTests : ICheckoutListener
     {
         // Product Pricing
         //A - 5
@@ -20,13 +20,29 @@ namespace CheckOutKata
 
         //
 
+        public Money Total { get; set; }
+
         private CheckOut _checkout;
 
         [TestInitialize]
         public void Setup()
         {
             _checkout = new CheckOut();
+            _checkout.ItemScanned += _checkout_ItemScanned;
+            _checkout.TotalCalculated += _checkout_TotalCalculated;
         }
+
+        void _checkout_ItemScanned(object sender, ItemScannedEventArgs e)
+        {
+            System.Diagnostics.Debug.WriteLine("Price of scanned item {0} is {1}, sub total after scan  is {2}", e.ScannedProductName, e.ScannedProductPrice, e.Total);
+        }
+
+        void _checkout_TotalCalculated(object sender, TotalCalculatedEventArgs e)
+        {
+            System.Diagnostics.Debug.WriteLine("Final total is {0}", e.Total);
+            this.Total = e.Total;
+        }
+        
 
         [TestMethod]
         public void TotalCostof1A1B1C_30()
@@ -36,7 +52,8 @@ namespace CheckOutKata
                 .Scan(new Product("B"))
                 .Scan(new Product("C"));
 
-            Assert.AreEqual(new Money(30), _checkout.GetTotal());
+            _checkout.CalculateTotal();
+            Assert.AreEqual(new Money(30), this.Total);
         }
 
         [TestMethod]
@@ -44,8 +61,8 @@ namespace CheckOutKata
         {
             _checkout
                 .Scan(new Product("A"));
-
-            Assert.AreEqual(new Money(5), _checkout.GetTotal());
+            _checkout.CalculateTotal();
+            Assert.AreEqual(new Money(5), this.Total);
         }
 
         [TestMethod]
@@ -53,8 +70,8 @@ namespace CheckOutKata
         {
             _checkout
                 .Scan(new Product("B"));
-
-            Assert.AreEqual(new Money(10), _checkout.GetTotal());
+            _checkout.CalculateTotal();
+            Assert.AreEqual(new Money(10), this.Total);
         }
 
         [TestMethod]
@@ -62,8 +79,8 @@ namespace CheckOutKata
         {
             _checkout
                 .Scan(new Product("C"));
-
-            Assert.AreEqual(new Money(20), _checkout.GetTotal());
+            _checkout.CalculateTotal();
+            Assert.AreEqual(new Money(20), this.Total);
         }
 
         [TestMethod]
@@ -72,8 +89,8 @@ namespace CheckOutKata
             _checkout
                 .Scan(new Product("A"))
                 .Scan(new Product("A"));
-
-            Assert.AreEqual(new Money(10), _checkout.GetTotal());
+            _checkout.CalculateTotal();
+            Assert.AreEqual(new Money(10), this.Total);
         }
 
         [TestMethod]
@@ -83,8 +100,8 @@ namespace CheckOutKata
                 .Scan(new Product("A"))
                 .Scan(new Product("A"))
                 .Scan(new Product("A"));
-
-            Assert.AreEqual(new Money(10), _checkout.GetTotal());
+            _checkout.CalculateTotal();
+            Assert.AreEqual(new Money(10), this.Total);
         }
 
         [TestMethod]
@@ -95,8 +112,8 @@ namespace CheckOutKata
                 .Scan(new Product("A"))
                 .Scan(new Product("A"))
                 .Scan(new Product("A"));
-
-            Assert.AreEqual(new Money(15), _checkout.GetTotal());
+            _checkout.CalculateTotal();
+            Assert.AreEqual(new Money(15), this.Total);
         }
 
 
@@ -110,8 +127,8 @@ namespace CheckOutKata
                 .Scan(new Product("A"))
                 .Scan(new Product("A"))
                 .Scan(new Product("A"));
-
-            Assert.AreEqual(new Money(20), _checkout.GetTotal());
+            _checkout.CalculateTotal();
+            Assert.AreEqual(new Money(20), this.Total);
         }
 
         [TestMethod]
@@ -120,8 +137,8 @@ namespace CheckOutKata
             _checkout
                 .Scan(new Product("B"))
                 .Scan(new Product("C"));
-
-            Assert.AreEqual(new Money(25), _checkout.GetTotal());
+            _checkout.CalculateTotal();
+            Assert.AreEqual(new Money(25), this.Total);
         }
 
         [TestMethod]
@@ -132,8 +149,8 @@ namespace CheckOutKata
                 .Scan(new Product("A"))
                 .Scan(new Product("C"))
                 .Scan(new Product("C"));
-
-            Assert.AreEqual(new Money(40), _checkout.GetTotal());
+            _checkout.CalculateTotal();
+            Assert.AreEqual(new Money(40), this.Total);
         }
 
 
@@ -143,8 +160,8 @@ namespace CheckOutKata
             _checkout
                 .Scan(new Product("B"))
                 .Scan(new Product("B"));
-
-            Assert.AreEqual(new Money(15), _checkout.GetTotal());
+            _checkout.CalculateTotal();
+            Assert.AreEqual(new Money(15), this.Total);
         }
 
 
@@ -156,8 +173,8 @@ namespace CheckOutKata
                 .Scan(new Product("B"))
                 .Scan(new Product("B"))
                 .Scan(new Product("B"));
-
-            Assert.AreEqual(new Money(30), _checkout.GetTotal());
+            _checkout.CalculateTotal();
+            Assert.AreEqual(new Money(30), this.Total);
         }
 
         [TestMethod]
@@ -172,8 +189,8 @@ namespace CheckOutKata
                 .Scan(new Product("B"))
                 .Scan(new Product("B"))
                 .Scan(new Product("B"));
-
-            Assert.AreEqual(new Money(60), _checkout.GetTotal());
+            _checkout.CalculateTotal();
+            Assert.AreEqual(new Money(60), this.Total);
         }
 
         [TestMethod]
@@ -182,8 +199,8 @@ namespace CheckOutKata
             _checkout
                 .Scan(new Product("C"))
                 .Scan(new Product("C"));
-
-            Assert.AreEqual(new Money(35), _checkout.GetTotal());
+            _checkout.CalculateTotal();
+            Assert.AreEqual(new Money(35), this.Total);
         }
 
         [TestMethod]
@@ -199,10 +216,13 @@ namespace CheckOutKata
                 _checkout
                     .Scan(new Product("D"));
             }
-
-            Assert.AreEqual(totalCost, _checkout.GetTotal());
+            _checkout.CalculateTotal();
+            Assert.AreEqual(totalCost, this.Total);
 
         }
+
+
+
 
 
 

@@ -39,5 +39,10 @@ namespace CheckOutKata
         {
             return (p1._productName != p2._productName);
         }
+
+        public override string ToString()
+        {
+            return _productName;
+        }
     }
 }

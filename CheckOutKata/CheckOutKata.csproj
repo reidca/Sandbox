@@ -58,9 +58,12 @@
     <Compile Include="DiscountRule.cs" />
     <Compile Include="EquitableList.cs" />
     <Compile Include="IBasketItem.cs" />
+    <Compile Include="IProductScanListener.cs" />
     <Compile Include="Money.cs" />
     <Compile Include="PricingEngine.cs" />
     <Compile Include="Product.cs" />
+    <Compile Include="ItemScannedEventArgs.cs" />
+    <Compile Include="TotalUpdatedEventArgs.cs" />
     <Compile Include="UnitTest1.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
